@@ -4,7 +4,8 @@ const DrawingCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [prevPosition, setPrevPosition] = useState({ x: 0, y: 0 });
-
+  const width = 500;
+  const height = 500;
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
@@ -26,10 +27,60 @@ const DrawingCanvas: React.FC = () => {
           y: e.clientY - rect.top,
         };
 
-        context.beginPath();
-        context.moveTo(prevPos.x, prevPos.y);
-        context.lineTo(currentPos.x, currentPos.y);
-        context.stroke();
+        const paint = (offset?: number) => {
+          const subOffset = offset ? offset : 0;
+
+          // normal movement
+          context.beginPath();
+          context.moveTo(prevPos.x - subOffset, prevPos.y - subOffset);
+          context.lineTo(currentPos.x - subOffset, currentPos.y - subOffset);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(prevPos.y - subOffset, prevPos.x - subOffset);
+          context.lineTo(currentPos.y - subOffset, currentPos.x - subOffset);
+          context.stroke();
+
+          // normal movement right site
+          context.beginPath();
+          context.moveTo(500 - prevPos.x, prevPos.y);
+          context.lineTo(500 - currentPos.x, currentPos.y);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(500 - prevPos.y, prevPos.x);
+          context.lineTo(500 - currentPos.y, currentPos.x);
+          context.stroke();
+
+          // normal movement opposite site
+          context.beginPath();
+          context.moveTo(500 - prevPos.x, 500 - prevPos.y);
+          context.lineTo(500 - currentPos.x, 500 - currentPos.y);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(500 - prevPos.y, 500 - prevPos.x);
+          context.lineTo(500 - currentPos.y, 500 - currentPos.x);
+          context.stroke();
+
+          // normal movement down site
+          context.beginPath();
+          context.moveTo(prevPos.x, 500 - prevPos.y);
+          context.lineTo(currentPos.x, 500 - currentPos.y);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(prevPos.y, 500 - prevPos.x);
+          context.lineTo(currentPos.y, 500 - currentPos.x);
+          context.stroke();
+        };
+
+        paint();
+
         setPrevPosition({ x: e.clientX, y: e.clientY });
       }
     };
@@ -54,8 +105,8 @@ const DrawingCanvas: React.FC = () => {
       <h1>Create Mandalas</h1>
       <canvas
         ref={canvasRef}
-        width={500}
-        height={500}
+        width={width}
+        height={height}
         style={{
           border: '1px solid #000000',
         }}
