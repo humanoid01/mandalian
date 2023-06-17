@@ -6,6 +6,7 @@ const DrawingCanvas: React.FC = () => {
   const [prevPosition, setPrevPosition] = useState({ x: 0, y: 0 });
   const width = 500;
   const height = 500;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
@@ -99,16 +100,34 @@ const DrawingCanvas: React.FC = () => {
       document.addEventListener('mouseup', handleMouseUp);
     };
   }, [isDrawing, prevPosition]);
+  const [backgroundImage, setBackgroundImage] = useState<null | string>(null);
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        setBackgroundImage(reader.result as string);
+      };
+    }
+  };
 
   return (
     <div>
       <h1>Create Mandalas</h1>
+      <div onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
+        <p>Drag and drop an image here</p>
+      </div>
+
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         style={{
           border: '1px solid #000000',
+          background: `url(${backgroundImage})`,
         }}
       />
     </div>
