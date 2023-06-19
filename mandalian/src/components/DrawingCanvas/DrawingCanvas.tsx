@@ -31,56 +31,46 @@ const DrawingCanvas: React.FC = () => {
           y: e.clientY - rect.top,
         };
 
-        const paint = (offset?: number) => {
-          const subOffset = offset ? offset : 0;
+        const midX = width / 2;
+        const midY = height / 2;
 
+        const rPrev = Math.sqrt(
+          (prevPos.x - midX) ** 2 + (prevPos.y - midY) ** 2
+        );
+
+        const rCurr = Math.sqrt(
+          (currentPos.x - midX) ** 2 + (currentPos.y - midY) ** 2
+        );
+
+        const paint = () => {
           // normal movement
+          const rad = (180 * Math.PI) / 180;
           context.beginPath();
-          context.moveTo(prevPos.x - subOffset, prevPos.y - subOffset);
-          context.lineTo(currentPos.x - subOffset, currentPos.y - subOffset);
+          context.moveTo(prevPos.x, prevPos.y);
+          context.lineTo(currentPos.x, currentPos.y);
           context.stroke();
 
+          const prevAngle = Math.atan2(prevPos.y - midY, prevPos.x - midX);
+          const currAngle = Math.atan2(
+            currentPos.y - midY,
+            currentPos.x - midX
+          );
+
+          context.beginPath();
+          context.moveTo(
+            midX + rPrev * Math.cos(prevAngle + rad),
+            midY + rPrev * Math.sin(prevAngle + rad)
+          );
+          context.lineTo(
+            midX + rCurr * Math.cos(currAngle + rad),
+            midY + rCurr * Math.sin(currAngle + rad)
+          );
+          context.stroke();
           // mirrored movement
-          context.beginPath();
-          context.moveTo(prevPos.y - subOffset, prevPos.x - subOffset);
-          context.lineTo(currentPos.y - subOffset, currentPos.x - subOffset);
-          context.stroke();
-
-          // normal movement right site
-          context.beginPath();
-          context.moveTo(500 - prevPos.x, prevPos.y);
-          context.lineTo(500 - currentPos.x, currentPos.y);
-          context.stroke();
-
-          // mirrored movement
-          context.beginPath();
-          context.moveTo(500 - prevPos.y, prevPos.x);
-          context.lineTo(500 - currentPos.y, currentPos.x);
-          context.stroke();
-
-          // normal movement opposite site
-          context.beginPath();
-          context.moveTo(500 - prevPos.x, 500 - prevPos.y);
-          context.lineTo(500 - currentPos.x, 500 - currentPos.y);
-          context.stroke();
-
-          // mirrored movement
-          context.beginPath();
-          context.moveTo(500 - prevPos.y, 500 - prevPos.x);
-          context.lineTo(500 - currentPos.y, 500 - currentPos.x);
-          context.stroke();
-
-          // normal movement down site
-          context.beginPath();
-          context.moveTo(prevPos.x, 500 - prevPos.y);
-          context.lineTo(currentPos.x, 500 - currentPos.y);
-          context.stroke();
-
-          // mirrored movement
-          context.beginPath();
-          context.moveTo(prevPos.y, 500 - prevPos.x);
-          context.lineTo(currentPos.y, 500 - currentPos.x);
-          context.stroke();
+          // context.beginPath();
+          // context.moveTo(prevPos.y, prevPos.x);
+          // context.lineTo(currentPos.y, currentPos.x);
+          // context.stroke();
         };
 
         paint();
@@ -139,3 +129,41 @@ const DrawingCanvas: React.FC = () => {
 };
 
 export default DrawingCanvas;
+
+/*
+   // normal movement right site
+          context.beginPath();
+          context.moveTo(500 - prevPos.x, prevPos.y);
+          context.lineTo(500 - currentPos.x, currentPos.y);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(500 - prevPos.y, prevPos.x);
+          context.lineTo(500 - currentPos.y, currentPos.x);
+          context.stroke();
+
+          // normal movement opposite site
+          context.beginPath();
+          context.moveTo(500 - prevPos.x, 500 - prevPos.y);
+          context.lineTo(500 - currentPos.x, 500 - currentPos.y);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(500 - prevPos.y, 500 - prevPos.x);
+          context.lineTo(500 - currentPos.y, 500 - currentPos.x);
+          context.stroke();
+
+          // normal movement down site
+          context.beginPath();
+          context.moveTo(prevPos.x, 500 - prevPos.y);
+          context.lineTo(currentPos.x, 500 - currentPos.y);
+          context.stroke();
+
+          // mirrored movement
+          context.beginPath();
+          context.moveTo(prevPos.y, 500 - prevPos.x);
+          context.lineTo(currentPos.y, 500 - currentPos.x);
+          context.stroke();
+*/
