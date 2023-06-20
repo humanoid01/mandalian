@@ -6,7 +6,8 @@ const DrawingCanvas: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [prevPosition, setPrevPosition] = useState({ x: 0, y: 0 });
   const [color, setColor] = useState<string>('#000');
-
+  const [sections, setSections] = useState<number>(16);
+  const [mirror, setMirror] = useState<boolean>(true);
   const width = 500;
   const height = 500;
 
@@ -43,34 +44,36 @@ const DrawingCanvas: React.FC = () => {
         );
 
         const paint = () => {
-          // normal movement
-          const rad = (180 * Math.PI) / 180;
-          context.beginPath();
-          context.moveTo(prevPos.x, prevPos.y);
-          context.lineTo(currentPos.x, currentPos.y);
-          context.stroke();
-
+          // our angles in radians
           const prevAngle = Math.atan2(prevPos.y - midY, prevPos.x - midX);
           const currAngle = Math.atan2(
             currentPos.y - midY,
             currentPos.x - midX
           );
 
-          context.beginPath();
-          context.moveTo(
-            midX + rPrev * Math.cos(prevAngle + rad),
-            midY + rPrev * Math.sin(prevAngle + rad)
-          );
-          context.lineTo(
-            midX + rCurr * Math.cos(currAngle + rad),
-            midY + rCurr * Math.sin(currAngle + rad)
-          );
-          context.stroke();
-          // mirrored movement
-          // context.beginPath();
-          // context.moveTo(prevPos.y, prevPos.x);
-          // context.lineTo(currentPos.y, currentPos.x);
-          // context.stroke();
+          // Additional sections
+          const angle = 360 / sections;
+          for (let i = 1; i <= sections; i++) {
+            // radians
+            const rad = (angle * i * Math.PI) / 180;
+            // coordinates
+            const prevX = midX + rPrev * Math.cos(prevAngle + rad);
+            const prevY = midY + rPrev * Math.sin(prevAngle + rad);
+            const currX = midX + rCurr * Math.cos(currAngle + rad);
+            const currY = midY + rCurr * Math.sin(currAngle + rad);
+            context.beginPath();
+            context.moveTo(prevX, prevY);
+            context.lineTo(currX, currY);
+            context.stroke();
+            // mirrored movement
+
+            if (mirror) {
+              context.beginPath();
+              context.moveTo(prevY, prevX);
+              context.lineTo(currY, currX);
+              context.stroke();
+            }
+          }
         };
 
         paint();
@@ -92,7 +95,7 @@ const DrawingCanvas: React.FC = () => {
       document.removeEventListener('mouseout', handleMouseOut);
       document.addEventListener('mouseup', handleMouseUp);
     };
-  }, [isDrawing, prevPosition, color]);
+  }, [isDrawing, prevPosition, color, mirror, sections, height, width]);
   const [backgroundImage, setBackgroundImage] = useState<null | string>(null);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -114,6 +117,21 @@ const DrawingCanvas: React.FC = () => {
       <div onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
         <p>Drag and drop an image here</p>
       </div>
+      Mirror:{' '}
+      <input
+        type='checkbox'
+        checked={mirror}
+        onChange={() => setMirror(!mirror)}
+      />
+      <div>
+        Sections:{' '}
+        <input
+          type='number'
+          value={sections}
+          onChange={e => setSections(Number(e.target.value))}
+        />
+      </div>
+      <br />
       <canvas
         ref={canvasRef}
         width={width}
@@ -129,41 +147,3 @@ const DrawingCanvas: React.FC = () => {
 };
 
 export default DrawingCanvas;
-
-/*
-   // normal movement right site
-          context.beginPath();
-          context.moveTo(500 - prevPos.x, prevPos.y);
-          context.lineTo(500 - currentPos.x, currentPos.y);
-          context.stroke();
-
-          // mirrored movement
-          context.beginPath();
-          context.moveTo(500 - prevPos.y, prevPos.x);
-          context.lineTo(500 - currentPos.y, currentPos.x);
-          context.stroke();
-
-          // normal movement opposite site
-          context.beginPath();
-          context.moveTo(500 - prevPos.x, 500 - prevPos.y);
-          context.lineTo(500 - currentPos.x, 500 - currentPos.y);
-          context.stroke();
-
-          // mirrored movement
-          context.beginPath();
-          context.moveTo(500 - prevPos.y, 500 - prevPos.x);
-          context.lineTo(500 - currentPos.y, 500 - currentPos.x);
-          context.stroke();
-
-          // normal movement down site
-          context.beginPath();
-          context.moveTo(prevPos.x, 500 - prevPos.y);
-          context.lineTo(currentPos.x, 500 - currentPos.y);
-          context.stroke();
-
-          // mirrored movement
-          context.beginPath();
-          context.moveTo(prevPos.y, 500 - prevPos.x);
-          context.lineTo(currentPos.y, 500 - currentPos.x);
-          context.stroke();
-*/
