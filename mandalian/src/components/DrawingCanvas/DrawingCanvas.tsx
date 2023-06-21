@@ -6,6 +6,7 @@ interface Point {
   x: number;
   y: number;
 }
+
 const DrawingCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const btnUndoRef = useRef<HTMLButtonElement | null>(null);
@@ -23,50 +24,8 @@ const DrawingCanvas: React.FC = () => {
 
   const width = 500;
   const height = 500;
-  const midX = width / 2;
-  const midY = height / 2;
-  const angle = 360 / sections;
+
   const handleColor = (newColor: ColorResult) => setColor(newColor.hex);
-
-  const reDraw = (path: Point[], context: CanvasRenderingContext2D) => {
-    for (let i = 0; i < path.length; i++) {
-      if (i + 1 >= path.length) return;
-      const currentPosX = path[i].x;
-      const currentPosY = path[i].y;
-      const nextPosX = path[i + 1].x;
-      const nextPosY = path[i + 1].y;
-      const rCurr = Math.sqrt(
-        (currentPosX - midX) ** 2 + (currentPosY - midY) ** 2
-      );
-      const rNext = Math.sqrt((nextPosX - midX) ** 2 + (nextPosY - midY) ** 2);
-
-      const currAngle = Math.atan2(currentPosY - midY, currentPosX - midX);
-      const nextAngle = Math.atan2(nextPosY - midY, nextPosX - midX);
-
-      for (let i = 1; i <= sections; i++) {
-        // radians
-        const rad = (angle * i * Math.PI) / 180;
-        // coordinates
-        const currX = midX + rCurr * Math.cos(currAngle + rad);
-        const currY = midY + rCurr * Math.sin(currAngle + rad);
-        const nextX = midX + rNext * Math.cos(nextAngle + rad);
-        const nextY = midY + rNext * Math.sin(nextAngle + rad);
-
-        context.beginPath();
-        context.moveTo(currX, currY);
-        context.lineTo(nextX, nextY);
-        context.stroke();
-        // mirrored movement
-
-        if (mirror) {
-          context.beginPath();
-          context.moveTo(currY, currX);
-          context.lineTo(nextY, nextX);
-          context.stroke();
-        }
-      }
-    }
-  };
 
   useEffect(() => {
     const btnUndo = btnUndoRef.current;
@@ -76,16 +35,53 @@ const DrawingCanvas: React.FC = () => {
     if (!context || !canvas || !btnUndo || !btnRedo) return;
     const rect = canvas.getBoundingClientRect();
 
-    const handleMouseDown = (e: MouseEvent) => {
-      setIsDrawing(true);
-      setPoints(points => [
-        ...points,
-        { x: e.clientX - rect.left, y: e.clientY - rect.top },
-      ]);
-      setPrevPosition({ x: e.clientX, y: e.clientY });
-    };
-
+    const midX = width / 2;
+    const midY = height / 2;
+    const angle = 360 / sections;
     context.strokeStyle = color;
+
+    // Function used to redraw memembered coordinates
+    const reDraw = (path: Point[], context: CanvasRenderingContext2D) => {
+      for (let i = 0; i < path.length; i++) {
+        if (i + 1 >= path.length) return;
+        const currentPosX = path[i].x;
+        const currentPosY = path[i].y;
+        const nextPosX = path[i + 1].x;
+        const nextPosY = path[i + 1].y;
+        const rCurr = Math.sqrt(
+          (currentPosX - midX) ** 2 + (currentPosY - midY) ** 2
+        );
+        const rNext = Math.sqrt(
+          (nextPosX - midX) ** 2 + (nextPosY - midY) ** 2
+        );
+
+        const currAngle = Math.atan2(currentPosY - midY, currentPosX - midX);
+        const nextAngle = Math.atan2(nextPosY - midY, nextPosX - midX);
+
+        for (let i = 1; i <= sections; i++) {
+          // Radians to calculate correct shift of a point
+          const rad = (angle * i * Math.PI) / 180;
+          // Caluclated new coordinates
+          const currX = midX + rCurr * Math.cos(currAngle + rad);
+          const currY = midY + rCurr * Math.sin(currAngle + rad);
+          const nextX = midX + rNext * Math.cos(nextAngle + rad);
+          const nextY = midY + rNext * Math.sin(nextAngle + rad);
+
+          context.beginPath();
+          context.moveTo(currX, currY);
+          context.lineTo(nextX, nextY);
+          context.stroke();
+
+          // Mirrored coordinates
+          if (mirror) {
+            context.beginPath();
+            context.moveTo(currY, currX);
+            context.lineTo(nextY, nextX);
+            context.stroke();
+          }
+        }
+      }
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isDrawing) {
@@ -115,9 +111,11 @@ const DrawingCanvas: React.FC = () => {
 
           // Additional sections
           for (let i = 1; i <= sections; i++) {
-            // radians
+            // Radians to calculate correct shift of a point
+
             const rad = (angle * i * Math.PI) / 180;
-            // coordinates
+            // Caluclated new coordinates
+
             const prevX = midX + rPrev * Math.cos(prevAngle + rad);
             const prevY = midY + rPrev * Math.sin(prevAngle + rad);
             const currX = midX + rCurr * Math.cos(currAngle + rad);
@@ -126,7 +124,7 @@ const DrawingCanvas: React.FC = () => {
             context.moveTo(prevX, prevY);
             context.lineTo(currX, currY);
             context.stroke();
-            // mirrored movement
+            // Mirrored coordinates
 
             if (mirror) {
               context.beginPath();
@@ -144,7 +142,7 @@ const DrawingCanvas: React.FC = () => {
     };
 
     const undo = () => {
-      // remove last element
+      // Directly mutate our state by removing last element from it
       undoPaths.pop();
       context.clearRect(0, 0, width, height);
       undoPaths.forEach(path => {
@@ -153,9 +151,11 @@ const DrawingCanvas: React.FC = () => {
     };
 
     const redo = () => {
-      // remove last element
+      // create copy of redoPaths that holds every path
       let newPaths = [...redoPaths];
+      // copy redoPaths paths from 0 to one index further than actual undo paths length, so later we can undo it again if needed
       newPaths = newPaths.splice(0, undoPaths.length + 1);
+      // Set undoPaths to newPaths
       setUndoPaths(newPaths);
       context.clearRect(0, 0, width, height);
       newPaths.forEach(path => {
@@ -163,8 +163,19 @@ const DrawingCanvas: React.FC = () => {
       });
     };
 
-    const handleMouseOut = () => {
-      if (!isDrawing) return;
+    // Enable drawing, remember starting point in case to recreate it later
+    const handleMouseDown = (e: MouseEvent) => {
+      setIsDrawing(true);
+      setPoints(points => [
+        ...points,
+        { x: e.clientX - rect.left, y: e.clientY - rect.top },
+      ]);
+      setPrevPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleSave = () => {
+      // If we undo to 0 elements then set memorized paths to new ones
+
       if (undoPaths.length === 0) {
         setUndoPaths([points]);
         setRedoPaths([points]);
@@ -177,18 +188,17 @@ const DrawingCanvas: React.FC = () => {
       setPoints([]);
       setIsDrawing(false);
     };
+
+    // stop drawing
+    const handleMouseOut = () => {
+      // in case we are not drawing but we move mouse out canvas, that will prevent additional saves
+      if (!isDrawing) return;
+      handleSave();
+    };
+
+    // stop drawing
     const handleMouseUp = () => {
-      if (undoPaths.length === 0) {
-        setUndoPaths([points]);
-        setRedoPaths([points]);
-        setPoints([]);
-        setIsDrawing(false);
-        return;
-      }
-      setUndoPaths(paths => [...paths, points]);
-      setRedoPaths(paths => [...paths, points]);
-      setPoints([]);
-      setIsDrawing(false);
+      handleSave();
     };
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
@@ -215,9 +225,7 @@ const DrawingCanvas: React.FC = () => {
     width,
     points,
     undoPaths,
-    angle,
-    midX,
-    midY,
+    redoPaths,
   ]);
 
   return (
