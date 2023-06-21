@@ -98,7 +98,7 @@ const DrawingCanvas: React.FC = () => {
       undoPaths.forEach(path => {
         context.strokeStyle = path[1];
         context.beginPath();
-        if (!path[0][0].x || !path[0][0].y) return;
+        if (!path[0][0]?.x || !path[0][0]?.y) return;
         const startX = path[0][0].x;
         const startY = path[0][0].y;
 
@@ -226,6 +226,8 @@ const DrawingCanvas: React.FC = () => {
     // Enable drawing, remember starting point in case to recreate it later
     const handleMouseDown = (e: MouseEvent) => {
       setIsDrawing(true);
+      setRedoPaths(undoPaths);
+
       setPoints(points => [
         ...points,
         { x: e.clientX - rect.left, y: e.clientY - rect.top },
@@ -293,6 +295,20 @@ const DrawingCanvas: React.FC = () => {
     midY,
   ]);
 
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const image = canvas.toDataURL('image/png');
+
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = 'canvas_image.png';
+
+    // Simulate a click to trigger the download
+    link.click();
+  };
+
   return (
     <div
       style={{
@@ -303,6 +319,7 @@ const DrawingCanvas: React.FC = () => {
       <button ref={btnUndoRef}>undo</button>
       <button ref={btnRedoRef}>redo</button>
       <button ref={btnTransformRef}>Transform</button>
+      <button onClick={handleDownload}>Download</button>
       <h1>Create Mandalas</h1>
       <DragAndDrop setBackgroundImage={setBackgroundImage} />
       Mirror:{' '}
