@@ -8,14 +8,15 @@ interface Point {
 }
 const DrawingCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-
+  const btnUndoRef = useRef<HTMLButtonElement | null>(null);
+  const btnRedoRef = useRef<HTMLButtonElement | null>(null);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [sections, setSections] = useState<number>(16);
   const [mirror, setMirror] = useState<boolean>(true);
   const [prevPosition, setPrevPosition] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState<Point[]>([]);
-  const [paths, setPaths] = useState<Point[][]>([]);
+  const [undoPaths, setUndoPaths] = useState<Point[][]>([]);
+  const [redoPaths, setRedoPaths] = useState<Point[][]>([]);
 
   const [color, setColor] = useState<string>('#000');
   const [backgroundImage, setBackgroundImage] = useState<null | string>(null);
@@ -26,16 +27,57 @@ const DrawingCanvas: React.FC = () => {
   const midY = height / 2;
   const angle = 360 / sections;
   const handleColor = (newColor: ColorResult) => setColor(newColor.hex);
+
+  const reDraw = (path: Point[], context: CanvasRenderingContext2D) => {
+    for (let i = 0; i < path.length; i++) {
+      if (i + 1 >= path.length) return;
+      const currentPosX = path[i].x;
+      const currentPosY = path[i].y;
+      const nextPosX = path[i + 1].x;
+      const nextPosY = path[i + 1].y;
+      const rCurr = Math.sqrt(
+        (currentPosX - midX) ** 2 + (currentPosY - midY) ** 2
+      );
+      const rNext = Math.sqrt((nextPosX - midX) ** 2 + (nextPosY - midY) ** 2);
+
+      const currAngle = Math.atan2(currentPosY - midY, currentPosX - midX);
+      const nextAngle = Math.atan2(nextPosY - midY, nextPosX - midX);
+
+      for (let i = 1; i <= sections; i++) {
+        // radians
+        const rad = (angle * i * Math.PI) / 180;
+        // coordinates
+        const currX = midX + rCurr * Math.cos(currAngle + rad);
+        const currY = midY + rCurr * Math.sin(currAngle + rad);
+        const nextX = midX + rNext * Math.cos(nextAngle + rad);
+        const nextY = midY + rNext * Math.sin(nextAngle + rad);
+
+        context.beginPath();
+        context.moveTo(currX, currY);
+        context.lineTo(nextX, nextY);
+        context.stroke();
+        // mirrored movement
+
+        if (mirror) {
+          context.beginPath();
+          context.moveTo(currY, currX);
+          context.lineTo(nextY, nextX);
+          context.stroke();
+        }
+      }
+    }
+  };
+
   useEffect(() => {
-    const btn = btnRef.current;
+    const btnUndo = btnUndoRef.current;
+    const btnRedo = btnRedoRef.current;
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
-    if (!context || !canvas || !btn) return;
+    if (!context || !canvas || !btnUndo || !btnRedo) return;
     const rect = canvas.getBoundingClientRect();
 
     const handleMouseDown = (e: MouseEvent) => {
       setIsDrawing(true);
-      console.log(e.clientX, e.clientY);
       setPoints(points => [
         ...points,
         { x: e.clientX - rect.left, y: e.clientY - rect.top },
@@ -56,15 +98,14 @@ const DrawingCanvas: React.FC = () => {
           y: e.clientY - rect.top,
         };
 
-        const rPrev = Math.sqrt(
-          (prevPos.x - midX) ** 2 + (prevPos.y - midY) ** 2
-        );
-
-        const rCurr = Math.sqrt(
-          (currentPos.x - midX) ** 2 + (currentPos.y - midY) ** 2
-        );
-
         const paint = () => {
+          const rPrev = Math.sqrt(
+            (prevPos.x - midX) ** 2 + (prevPos.y - midY) ** 2
+          );
+
+          const rCurr = Math.sqrt(
+            (currentPos.x - midX) ** 2 + (currentPos.y - midY) ** 2
+          );
           // our angles in radians
           const prevAngle = Math.atan2(prevPos.y - midY, prevPos.x - midX);
           const currAngle = Math.atan2(
@@ -102,60 +143,50 @@ const DrawingCanvas: React.FC = () => {
       }
     };
 
-    const reDraw = () => {
-      paths.pop();
+    const undo = () => {
+      // remove last element
+      undoPaths.pop();
       context.clearRect(0, 0, width, height);
-      paths.forEach(path => {
-        for (let i = 0; i < path.length; i++) {
-          if (i + 1 >= path.length) return;
-          const currentPosX = path[i].x;
-          const currentPosY = path[i].y;
-          const nextPosX = path[i + 1].x;
-          const nextPosY = path[i + 1].y;
-          const rCurr = Math.sqrt(
-            (currentPosX - midX) ** 2 + (currentPosY - midY) ** 2
-          );
-          const rNext = Math.sqrt(
-            (nextPosX - midX) ** 2 + (nextPosY - midY) ** 2
-          );
+      undoPaths.forEach(path => {
+        reDraw(path, context);
+      });
+    };
 
-          const currAngle = Math.atan2(currentPosY - midY, currentPosX - midX);
-          const nextAngle = Math.atan2(nextPosY - midY, nextPosX - midX);
-
-          for (let i = 1; i <= sections; i++) {
-            // radians
-            const rad = (angle * i * Math.PI) / 180;
-            // coordinates
-            const currX = midX + rCurr * Math.cos(currAngle + rad);
-            const currY = midY + rCurr * Math.sin(currAngle + rad);
-            const nextX = midX + rNext * Math.cos(nextAngle + rad);
-            const nextY = midY + rNext * Math.sin(nextAngle + rad);
-
-            context.beginPath();
-            context.moveTo(currX, currY);
-            context.lineTo(nextX, nextY);
-            context.stroke();
-            // mirrored movement
-
-            if (mirror) {
-              context.beginPath();
-              context.moveTo(currY, currX);
-              context.lineTo(nextY, nextX);
-              context.stroke();
-            }
-          }
-        }
+    const redo = () => {
+      // remove last element
+      let newPaths = [...redoPaths];
+      newPaths = newPaths.splice(0, undoPaths.length + 1);
+      setUndoPaths(newPaths);
+      context.clearRect(0, 0, width, height);
+      newPaths.forEach(path => {
+        reDraw(path, context);
       });
     };
 
     const handleMouseOut = () => {
       if (!isDrawing) return;
-      setPaths(paths => [...paths, points]);
+      if (undoPaths.length === 0) {
+        setUndoPaths([points]);
+        setRedoPaths([points]);
+        setPoints([]);
+        setIsDrawing(false);
+        return;
+      }
+      setUndoPaths(paths => [...paths, points]);
+      setRedoPaths(paths => [...paths, points]);
       setPoints([]);
       setIsDrawing(false);
     };
     const handleMouseUp = () => {
-      setPaths(paths => [...paths, points]);
+      if (undoPaths.length === 0) {
+        setUndoPaths([points]);
+        setRedoPaths([points]);
+        setPoints([]);
+        setIsDrawing(false);
+        return;
+      }
+      setUndoPaths(paths => [...paths, points]);
+      setRedoPaths(paths => [...paths, points]);
       setPoints([]);
       setIsDrawing(false);
     };
@@ -163,14 +194,16 @@ const DrawingCanvas: React.FC = () => {
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseout', handleMouseOut);
     canvas.addEventListener('mouseup', handleMouseUp);
-    btn.addEventListener('click', reDraw);
+    btnUndo.addEventListener('click', undo);
+    btnRedo.addEventListener('click', redo);
 
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseout', handleMouseOut);
       canvas.removeEventListener('mouseup', handleMouseUp);
-      btn.removeEventListener('click', reDraw);
+      btnUndo.removeEventListener('click', undo);
+      btnRedo.removeEventListener('click', redo);
     };
   }, [
     isDrawing,
@@ -181,7 +214,7 @@ const DrawingCanvas: React.FC = () => {
     height,
     width,
     points,
-    paths,
+    undoPaths,
     angle,
     midX,
     midY,
@@ -194,7 +227,8 @@ const DrawingCanvas: React.FC = () => {
         flexDirection: 'column',
         alignItems: 'center',
       }}>
-      <button ref={btnRef}>undo</button>
+      <button ref={btnUndoRef}>undo</button>
+      <button ref={btnRedoRef}>redo</button>
       <h1>Create Mandalas</h1>
       <DragAndDrop setBackgroundImage={setBackgroundImage} />
       Mirror:{' '}
