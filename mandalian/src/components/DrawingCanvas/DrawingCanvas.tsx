@@ -91,51 +91,53 @@ const DrawingCanvas: React.FC = () => {
       }
     };
 
-    // function transform() {
-    //   if (!context || !canvas) return;
-    //   context.clearRect(0, 0, canvas.width, canvas.height);
-    //   // draw all the paths in the paths array
-    //   const paths = undoPaths[0]
+    //
+    const transform = () => {
+      if (!context || !canvas) return;
 
-    //   paths.forEach(path => {
-    //     context.beginPath();
-    //     const startX = path[0].x;
-    //     const startY = path[0].y;
-    //     context.moveTo(startX, startY);
-    //     for (let i = 1; i < path.length; i++) {
-    //       const nextX = path[i].x;
-    //       const nextY = path[i].y;
-    //       context.lineTo(nextX, nextY);
-    //       const r = Math.sqrt((nextX - midX) ** 2 + (nextY - midY) ** 2);
+      undoPaths.forEach(path => {
+        context.strokeStyle = path[1];
+        context.beginPath();
+        if (!path[0][0].x || !path[0][0].y) return;
+        const startX = path[0][0].x;
+        const startY = path[0][0].y;
 
-    //       const prevAngle = Math.atan2(startY - midY, startX - midX);
-    //       const currAngle = Math.atan2(nextY - midY, nextX - midX);
+        context.moveTo(startX, startY);
+        for (let i = 1; i < path[0].length; i++) {
+          const nextX = path[0][i].x;
+          const nextY = path[0][i].y;
 
-    //       for (let i = 1; i <= sections; i++) {
-    //         // radians
-    //         const rad = (angle * i * Math.PI) / 180;
-    //         // coordinates
-    //         const prevX = midX + r * Math.cos(prevAngle + rad);
-    //         const prevY = midY + r * Math.sin(prevAngle + rad);
-    //         const currX = midX + r * Math.cos(currAngle + rad);
-    //         const currY = midY + r * Math.sin(currAngle + rad);
-    //         context.beginPath();
-    //         context.moveTo(prevX, prevY);
-    //         context.lineTo(currX, currY);
-    //         context.stroke();
-    //         // mirrored movement
+          context.lineTo(nextX, nextY);
+          const r = Math.sqrt((nextX - midX) ** 2 + (nextY - midY) ** 2);
 
-    //         if (mirror) {
-    //           context.beginPath();
-    //           context.moveTo(prevY, prevX);
-    //           context.lineTo(currY, currX);
-    //           context.stroke();
-    //         }
-    //       }
-    //     }
-    //     context.stroke();
-    //   });
-    // }
+          const prevAngle = Math.atan2(startY - midY, startX - midX);
+          const currAngle = Math.atan2(nextY - midY, nextX - midX);
+
+          for (let i = 1; i <= sections; i++) {
+            // radians
+            const rad = (angle * i * Math.PI) / 180;
+            // coordinates
+            const prevX = midX + r * Math.cos(prevAngle + rad);
+            const prevY = midY + r * Math.sin(prevAngle + rad);
+            const currX = midX + r * Math.cos(currAngle + rad);
+            const currY = midY + r * Math.sin(currAngle + rad);
+            context.beginPath();
+            context.moveTo(prevX, prevY);
+            context.lineTo(currX, currY);
+            context.stroke();
+            // mirrored movement
+
+            if (mirror) {
+              context.beginPath();
+              context.moveTo(prevY, prevX);
+              context.lineTo(currY, currX);
+              context.stroke();
+            }
+          }
+        }
+        context.stroke();
+      });
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isDrawing) {
@@ -264,7 +266,7 @@ const DrawingCanvas: React.FC = () => {
     canvas.addEventListener('mouseup', handleMouseUp);
     btnUndo.addEventListener('click', undo);
     btnRedo.addEventListener('click', redo);
-    // btnTransform.addEventListener('click', transform);
+    btnTransform.addEventListener('click', transform);
 
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
@@ -273,7 +275,7 @@ const DrawingCanvas: React.FC = () => {
       canvas.removeEventListener('mouseup', handleMouseUp);
       btnUndo.removeEventListener('click', undo);
       btnRedo.removeEventListener('click', redo);
-      // btnTransform.removeEventListener('click', transform);
+      btnTransform.removeEventListener('click', transform);
     };
   }, [
     isDrawing,
