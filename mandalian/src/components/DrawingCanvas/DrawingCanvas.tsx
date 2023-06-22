@@ -7,17 +7,16 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {
-  Box,
-  Button,
-  Checkbox,
-  Drawer,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+
 import { draw, handleDownload } from './DrawingCanvasFuncs';
+import Box from '@mui/material/Box/Box';
+import IconButton from '@mui/material/IconButton/IconButton';
+import Drawer from '@mui/material/Drawer/Drawer';
+import Stack from '@mui/material/Stack/Stack';
+import Button from '@mui/material/Button/Button';
+import Typography from '@mui/material/Typography/Typography';
+import TextField from '@mui/material/TextField/TextField';
+import Checkbox from '@mui/material/Checkbox/Checkbox';
 
 interface Point {
   x: number;
@@ -144,7 +143,7 @@ const DrawingCanvas: React.FC = () => {
               alignItems={'center'}
               textAlign={'center'}>
               <Box width={'100px'}>
-                <Typography>Sections: </Typography>
+                <Typography>Sections:</Typography>
                 <TextField
                   type='number'
                   value={sections}
