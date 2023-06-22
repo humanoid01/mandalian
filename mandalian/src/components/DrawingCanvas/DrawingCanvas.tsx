@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { ChromePicker, ColorResult } from 'react-color';
 // functions
 import { draw, handleDownload } from './DrawingCanvasFuncs';
@@ -48,7 +48,7 @@ const DrawingCanvas: React.FC = () => {
 
   const matches = useMediaQuery('(min-width:800px)');
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     matches
       ? setSize({ width: 500, height: 500 })
       : setSize({ width: 200, height: 200 });
@@ -63,6 +63,13 @@ const DrawingCanvas: React.FC = () => {
     for (const path of paths) draw(canvas, path);
   }, [paths]);
 
+  useLayoutEffect(() => {
+    if (!tempCanvasRef.current) return;
+    const canvas = tempCanvasRef.current;
+    canvas.getContext('2d')?.clearRect(0, 0, size.width, size.height);
+    if (currentPath) draw(canvas, currentPath);
+  }, [currentPath, size]);
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setRedoPaths(paths);
     setCurrentPath({
@@ -74,25 +81,18 @@ const DrawingCanvas: React.FC = () => {
   };
 
   const continueDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (currentPath === null || !tempCanvasRef.current) return;
-    const canvas = tempCanvasRef.current;
-    setCurrentPath({
-      ...currentPath,
-      points: [
-        ...currentPath.points,
-        { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY },
-      ],
-    });
-    canvas.getContext('2d')?.clearRect(0, 0, size.width, size.height);
-    if (currentPath) draw(canvas, currentPath);
+    if (currentPath)
+      setCurrentPath({
+        ...currentPath,
+        points: [
+          ...currentPath.points,
+          { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY },
+        ],
+      });
   };
 
   const stopDrawing = () => {
     setCurrentPath(null);
-
-    if (currentPath === null || !tempCanvasRef.current) return;
-    const canvas = tempCanvasRef.current;
-    canvas.getContext('2d')?.clearRect(0, 0, size.width, size.height);
 
     if (currentPath) {
       if (paths.length === 0) {
