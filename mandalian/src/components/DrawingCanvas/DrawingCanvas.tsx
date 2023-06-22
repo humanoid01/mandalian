@@ -70,24 +70,48 @@ const DrawingCanvas: React.FC = () => {
     if (currentPath) draw(canvas, currentPath);
   }, [currentPath, size]);
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const startDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const touchEvent = e as React.TouchEvent<HTMLCanvasElement>;
+    const mouseEvent = e as React.MouseEvent<HTMLCanvasElement>;
+    const canvas = canvasRef.current;
+    const rect = canvas?.getBoundingClientRect();
+    if (!rect) return;
+    const eventX = touchEvent.touches
+      ? touchEvent.touches[0].clientX - rect.left
+      : mouseEvent.nativeEvent.offsetX;
+    const eventY = touchEvent.touches
+      ? touchEvent.touches[0].clientY - rect.top
+      : mouseEvent.nativeEvent.offsetY;
+
     setRedoPaths(paths);
     setCurrentPath({
       color,
       sections: Number(sections),
       mirror,
-      points: [{ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY }],
+      points: [{ x: eventX, y: eventY }],
     });
   };
+  const continueDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const touchEvent = e as React.TouchEvent<HTMLCanvasElement>;
+    const mouseEvent = e as React.MouseEvent<HTMLCanvasElement>;
+    const canvas = canvasRef.current;
+    const rect = canvas?.getBoundingClientRect();
+    if (!rect) return;
+    const eventX = touchEvent.touches
+      ? touchEvent.touches[0].clientX - rect.left
+      : mouseEvent.nativeEvent.offsetX;
+    const eventY = touchEvent.touches
+      ? touchEvent.touches[0].clientY - rect.top
+      : mouseEvent.nativeEvent.offsetY;
 
-  const continueDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (currentPath)
       setCurrentPath({
         ...currentPath,
-        points: [
-          ...currentPath.points,
-          { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY },
-        ],
+        points: [...currentPath.points, { x: eventX, y: eventY }],
       });
   };
 
@@ -205,8 +229,11 @@ const DrawingCanvas: React.FC = () => {
             width={size.width}
             height={size.height}
             onMouseDown={startDrawing}
+            onTouchStart={startDrawing}
             onMouseMove={continueDrawing}
+            onTouchMove={continueDrawing}
             onMouseLeave={stopDrawing}
+            onTouchEnd={stopDrawing}
             onMouseUp={stopDrawing}
             style={{
               border: '1px solid #000000',
