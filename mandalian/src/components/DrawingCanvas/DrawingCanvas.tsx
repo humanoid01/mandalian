@@ -1,11 +1,18 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChromePicker, ColorResult } from 'react-color';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import DownloadIcon from '@mui/icons-material/Download';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
   Button,
   Checkbox,
   Drawer,
+  IconButton,
   Stack,
   TextField,
   Typography,
@@ -33,6 +40,7 @@ const DrawingCanvas: React.FC = () => {
   const [paths, setPaths] = useState<Path[]>([]);
   const [redoPaths, setRedoPaths] = useState<Path[]>([]);
   const [size, setSize] = useState({ width: 500, height: 500 });
+  const [open, setOpen] = useState(false);
 
   const matches = useMediaQuery('(min-width:800px)');
 
@@ -112,12 +120,27 @@ const DrawingCanvas: React.FC = () => {
     <Box display='flex'>
       <Box width={matches ? 220 : 0}>
         <Box width={'200px'}>
-          <Drawer variant={matches ? 'permanent' : 'temporary'}>
+          <IconButton
+            sx={{ position: 'absolute', left: '2%', top: '2%', zIndex: 1 }}
+            onClick={() => setOpen(true)}>
+            <MenuIcon />
+          </IconButton>
+          <Drawer
+            variant={matches ? 'permanent' : 'temporary'}
+            open={open}
+            onClose={() => setOpen(false)}>
+            {!matches ? (
+              <Box display='flex' justifyContent='flex-end'>
+                <IconButton onClick={() => setOpen(false)}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            ) : null}
             <Stack direction={'column'}>
-              <Button onClick={undo}>undo</Button>
-              <Button onClick={redo}>redo</Button>
-              <Button onClick={clear}>clear</Button>
-              <Button onClick={handleDownload}>download</Button>
+              <Button startIcon={<UndoIcon />} onClick={undo} />
+              <Button startIcon={<RedoIcon />} onClick={redo} />
+              <Button startIcon={<DeleteIcon />} onClick={clear} />
+              <Button startIcon={<DownloadIcon />} onClick={handleDownload} />
             </Stack>
             <Stack
               gap={2}
