@@ -1,6 +1,15 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChromePicker, ColorResult } from 'react-color';
-import { DragAndDrop } from './DragAndDrop/DragAndDrop';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Drawer,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 
 interface Point {
   x: number;
@@ -19,12 +28,19 @@ const DrawingCanvas: React.FC = () => {
 
   const [currentPath, setCurrentPath] = useState<null | Path>(null);
   const [mirror, setMirror] = useState<boolean>(true);
-  const [backgroundImage, setBackgroundImage] = useState<string>('');
   const [sections, setSections] = useState(16);
   const [color, setColor] = useState('#000');
   const [paths, setPaths] = useState<Path[]>([]);
   const [redoPaths, setRedoPaths] = useState<Path[]>([]);
   const [size, setSize] = useState({ width: 500, height: 500 });
+
+  const matches = useMediaQuery('(min-width:800px)');
+
+  useEffect(() => {
+    matches
+      ? setSize({ width: 500, height: 500 })
+      : setSize({ width: 200, height: 200 });
+  }, [matches]);
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setRedoPaths(paths);
@@ -79,12 +95,10 @@ const DrawingCanvas: React.FC = () => {
 
   const handleDownload = () => {
     if (!canvasRef.current) return;
-    const image = canvasRef.current.toDataURL('image/png');
+    const canvas = canvasRef.current;
     const link = document.createElement('a');
-
-    link.href = image;
+    link.href = canvas.toDataURL('image/png');
     link.download = 'canvas_image.png';
-
     link.click();
   };
 
@@ -95,61 +109,80 @@ const DrawingCanvas: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}>
-      <button onClick={undo}>undo</button>
-      <button onClick={redo}>redo</button>
-      <button onClick={handleDownload}>download</button>
-      <button onClick={clear}>clear</button>
-      <h1>Create Mandalas</h1>
-      <DragAndDrop setBackgroundImage={setBackgroundImage} />
-      Mirror:{' '}
-      <input
-        type='checkbox'
-        checked={mirror}
-        onChange={() => setMirror(!mirror)}
-      />
-      <div>
-        Sections:{' '}
-        <input
-          type='number'
-          value={sections}
-          onChange={e => setSections(Number(e.target.value))}
-        />
-      </div>
-      <div>
-        Size:{' '}
-        <input
-          type='number'
-          value={size.height}
-          onChange={e =>
-            setSize({
-              width: Number(e.target.value),
-              height: Number(e.target.value),
-            })
-          }
-        />
-      </div>
-      <br />
-      <canvas
-        ref={canvasRef}
-        width={size.width}
-        height={size.height}
-        onMouseDown={startDrawing}
-        onMouseMove={continueDrawing}
-        onMouseLeave={stopDrawing}
-        onMouseUp={stopDrawing}
-        style={{
-          border: '1px solid #000000',
-          background: `url(${backgroundImage})`,
-        }}
-      />
-      <ChromePicker color={color} onChange={handleColor} disableAlpha={true} />
-    </div>
+    <Box display='flex'>
+      <Box width={matches ? 220 : 0}>
+        <Box width={'200px'}>
+          <Drawer variant={matches ? 'permanent' : 'temporary'}>
+            <Stack direction={'column'}>
+              <Button onClick={undo}>undo</Button>
+              <Button onClick={redo}>redo</Button>
+              <Button onClick={clear}>clear</Button>
+              <Button onClick={handleDownload}>download</Button>
+            </Stack>
+            <Stack
+              gap={2}
+              m={2}
+              direction={'column'}
+              alignItems={'center'}
+              textAlign={'center'}>
+              <Box width={'100px'}>
+                <Typography>Sections: </Typography>
+                <TextField
+                  type='number'
+                  value={sections}
+                  onChange={e => setSections(Number(e.target.value))}
+                />
+              </Box>
+              <Box width={'100px'}>
+                <Typography>Size: </Typography>
+                <TextField
+                  type='number'
+                  value={size.height}
+                  onChange={e =>
+                    setSize({
+                      width: Number(e.target.value),
+                      height: Number(e.target.value),
+                    })
+                  }
+                />
+              </Box>
+              <Box display={'flex'} alignItems={'center'}>
+                <Typography>Mirror:</Typography>
+                <Checkbox
+                  checked={mirror}
+                  onChange={() => setMirror(!mirror)}
+                />
+              </Box>
+              <ChromePicker onChange={handleColor} color={color} />
+            </Stack>
+          </Drawer>
+        </Box>
+      </Box>
+      <Box flex='1'>
+        <Box
+          display={'flex'}
+          justifyContent={'center'}
+          alignContent={'center'}
+          position={'relative'}
+          height={'100vh'}>
+          <canvas
+            ref={canvasRef}
+            width={size.width}
+            height={size.height}
+            onMouseDown={startDrawing}
+            onMouseMove={continueDrawing}
+            onMouseLeave={stopDrawing}
+            onMouseUp={stopDrawing}
+            style={{
+              border: '1px solid #000000',
+              position: 'absolute',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          />
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
