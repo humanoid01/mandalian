@@ -1,14 +1,17 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChromePicker, ColorResult } from 'react-color';
+// functions
+import { draw, handleDownload } from './DrawingCanvasFuncs';
+
 import useMediaQuery from '@mui/material/useMediaQuery';
+// icons
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteIcon from '@mui/icons-material/Delete';
-
-import { draw, handleDownload } from './DrawingCanvasFuncs';
+// components
 import Box from '@mui/material/Box/Box';
 import IconButton from '@mui/material/IconButton/IconButton';
 import Drawer from '@mui/material/Drawer/Drawer';
@@ -32,6 +35,7 @@ export interface Path {
 
 const DrawingCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const tempCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [currentPath, setCurrentPath] = useState<null | Path>(null);
   const [mirror, setMirror] = useState<boolean>(true);
@@ -56,7 +60,6 @@ const DrawingCanvas: React.FC = () => {
     const context = canvas.getContext('2d')!;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
-
     for (const path of paths) draw(canvas, path);
   }, [paths]);
 
@@ -71,8 +74,8 @@ const DrawingCanvas: React.FC = () => {
   };
 
   const continueDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (currentPath === null || !canvasRef.current) return;
-
+    if (currentPath === null || !tempCanvasRef.current) return;
+    const canvas = tempCanvasRef.current;
     setCurrentPath({
       ...currentPath,
       points: [
@@ -80,18 +83,22 @@ const DrawingCanvas: React.FC = () => {
         { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY },
       ],
     });
-
-    draw(canvasRef.current, currentPath);
+    canvas.getContext('2d')?.clearRect(0, 0, size.width, size.height);
+    if (currentPath) draw(canvas, currentPath);
   };
 
   const stopDrawing = () => {
     setCurrentPath(null);
+
+    if (currentPath === null || !tempCanvasRef.current) return;
+    const canvas = tempCanvasRef.current;
+    canvas.getContext('2d')?.clearRect(0, 0, size.width, size.height);
+
     if (currentPath) {
       if (paths.length === 0) {
         setPaths([currentPath]);
         return setRedoPaths([currentPath]);
       }
-
       setPaths([...paths, currentPath]);
       setRedoPaths([...redoPaths, currentPath]);
     }
@@ -138,7 +145,7 @@ const DrawingCanvas: React.FC = () => {
             </Stack>
             <Stack
               gap={2}
-              m={2}
+              m={1}
               direction={'column'}
               alignItems={'center'}
               textAlign={'center'}>
@@ -184,6 +191,17 @@ const DrawingCanvas: React.FC = () => {
           height={'100vh'}>
           <canvas
             ref={canvasRef}
+            width={size.width}
+            height={size.height}
+            style={{
+              border: '1px solid #000000',
+              position: 'absolute',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          />
+          <canvas
+            ref={tempCanvasRef}
             width={size.width}
             height={size.height}
             onMouseDown={startDrawing}
