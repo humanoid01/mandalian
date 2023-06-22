@@ -24,9 +24,7 @@ const DrawingCanvas: React.FC = () => {
   const [color, setColor] = useState('#000');
   const [paths, setPaths] = useState<Path[]>([]);
   const [redoPaths, setRedoPaths] = useState<Path[]>([]);
-
-  const width = 500;
-  const height = 500;
+  const [size, setSize] = useState({ width: 500, height: 500 });
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setRedoPaths(paths);
@@ -91,6 +89,10 @@ const DrawingCanvas: React.FC = () => {
   };
 
   const handleColor = (newColor: ColorResult) => setColor(newColor.hex);
+  const clear = () => {
+    setPaths([]);
+    setCurrentPath(null);
+  };
 
   return (
     <div
@@ -102,6 +104,7 @@ const DrawingCanvas: React.FC = () => {
       <button onClick={undo}>undo</button>
       <button onClick={redo}>redo</button>
       <button onClick={handleDownload}>download</button>
+      <button onClick={clear}>clear</button>
       <h1>Create Mandalas</h1>
       <DragAndDrop setBackgroundImage={setBackgroundImage} />
       Mirror:{' '}
@@ -118,11 +121,24 @@ const DrawingCanvas: React.FC = () => {
           onChange={e => setSections(Number(e.target.value))}
         />
       </div>
+      <div>
+        Size:{' '}
+        <input
+          type='number'
+          value={size.height}
+          onChange={e =>
+            setSize({
+              width: Number(e.target.value),
+              height: Number(e.target.value),
+            })
+          }
+        />
+      </div>
       <br />
       <canvas
         ref={canvasRef}
-        width={width}
-        height={height}
+        width={size.width}
+        height={size.height}
         onMouseDown={startDrawing}
         onMouseMove={continueDrawing}
         onMouseLeave={stopDrawing}
