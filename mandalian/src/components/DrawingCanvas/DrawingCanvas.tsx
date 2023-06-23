@@ -228,11 +228,13 @@ const DrawingCanvas: React.FC = () => {
                 />
               </Box>
               <ChromePicker onChange={handleColor} color={color} />
-              <Typography
-                title={`Ctrl+Z to undo \nCtrl+Y to redo`}
-                sx={{ cursor: 'help' }}>
-                Shortcuts (Hover to display)
-              </Typography>
+              {matches ? (
+                <Typography
+                  title={`Ctrl+Z to undo \nCtrl+Y to redo`}
+                  sx={{ cursor: 'help' }}>
+                  Shortcuts (Hover to display)
+                </Typography>
+              ) : null}
             </Stack>
           </Drawer>
         </Box>
