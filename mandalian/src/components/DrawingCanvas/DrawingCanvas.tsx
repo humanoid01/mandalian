@@ -45,6 +45,7 @@ const DrawingCanvas: React.FC = () => {
   const [redoPaths, setRedoPaths] = useState<Path[]>([]);
   const [size, setSize] = useState({ width: 500, height: 500 });
   const [open, setOpen] = useState(false);
+  const [canvasRound, setCanvasRound] = useState(false);
 
   const matches = useMediaQuery('(min-width:800px)');
 
@@ -201,6 +202,13 @@ const DrawingCanvas: React.FC = () => {
                   onChange={() => setMirror(!mirror)}
                 />
               </Box>
+              <Box display={'flex'} alignItems={'center'}>
+                <Typography>Round:</Typography>
+                <Checkbox
+                  checked={canvasRound}
+                  onChange={() => setCanvasRound(!canvasRound)}
+                />
+              </Box>
               <ChromePicker onChange={handleColor} color={color} />
             </Stack>
           </Drawer>
@@ -222,6 +230,7 @@ const DrawingCanvas: React.FC = () => {
               position: 'absolute',
               top: '50%',
               transform: 'translateY(-50%)',
+              borderRadius: canvasRound ? '50%' : '0',
             }}
           />
           <canvas
@@ -240,6 +249,7 @@ const DrawingCanvas: React.FC = () => {
               position: 'absolute',
               top: '50%',
               transform: 'translateY(-50%)',
+              borderRadius: canvasRound ? '50%' : '0',
             }}
           />
         </Box>
