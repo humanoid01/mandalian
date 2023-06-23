@@ -2,8 +2,6 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { ChromePicker, ColorResult } from 'react-color';
 // functions
 import { draw, handleDownload } from './DrawingCanvasFuncs';
-
-import useMediaQuery from '@mui/material/useMediaQuery';
 // icons
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,6 +18,8 @@ import Button from '@mui/material/Button/Button';
 import Typography from '@mui/material/Typography/Typography';
 import TextField from '@mui/material/TextField/TextField';
 import Checkbox from '@mui/material/Checkbox/Checkbox';
+// media query
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 interface Point {
   x: number;
