@@ -56,12 +56,27 @@ const DrawingCanvas: React.FC = () => {
   }, [matches]);
 
   useLayoutEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.code === 'KeyZ') {
+        undo();
+      }
+      if (e.ctrlKey && e.code === 'KeyY') {
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d')!;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     for (const path of paths) draw(canvas, path);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [paths]);
 
   useLayoutEffect(() => {
@@ -70,6 +85,8 @@ const DrawingCanvas: React.FC = () => {
     canvas.getContext('2d')?.clearRect(0, 0, size.width, size.height);
     if (currentPath) draw(canvas, currentPath);
   }, [currentPath, size]);
+
+  const handleColor = (newColor: ColorResult) => setColor(newColor.hex);
 
   const startDrawing = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
@@ -132,12 +149,11 @@ const DrawingCanvas: React.FC = () => {
   const undo = () => setPaths(paths => paths.slice(0, paths.length - 1));
   const redo = () =>
     setPaths(paths => [...redoPaths].slice(0, paths.length + 1));
+
   const clear = () => {
     setPaths([]);
     setCurrentPath(null);
   };
-
-  const handleColor = (newColor: ColorResult) => setColor(newColor.hex);
 
   return (
     <Box display='flex'>
@@ -210,6 +226,11 @@ const DrawingCanvas: React.FC = () => {
                 />
               </Box>
               <ChromePicker onChange={handleColor} color={color} />
+              <Typography
+                title={`Ctrl+Z to undo \nCtrl+Y to redo`}
+                sx={{ cursor: 'help' }}>
+                Shortcuts (Hover to display)
+              </Typography>
             </Stack>
           </Drawer>
         </Box>
