@@ -203,12 +203,14 @@ const DrawingCanvas: React.FC = () => {
                 <TextField
                   type='number'
                   value={size.height}
-                  onChange={e =>
+                  onChange={e => {
+                    clear();
+                    setRedoPaths([]);
                     setSize({
                       width: Number(e.target.value),
                       height: Number(e.target.value),
-                    })
-                  }
+                    });
+                  }}
                 />
               </Box>
               <Box display={'flex'} alignItems={'center'}>
